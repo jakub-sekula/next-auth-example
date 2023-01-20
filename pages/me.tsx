@@ -17,15 +17,14 @@ export default function MePage({session, restaurants}) {
 export const getServerSideProps = async (ctx) => {
   const session = await getSession(ctx)
 
+  console.log(ctx.session)
+
   const headers = new Headers({'Authorization': `Bearer ${session?.jwt}` })
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants`,{headers})
 
-  console.log(res.status)
 
   const {data: restaurants} = await res.json() || {}
 
-  console.log(session)
-  console.log(restaurants)
 
   return {
     props: {session, restaurants}

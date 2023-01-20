@@ -19,19 +19,28 @@ export const authOptions = {
   callbacks: {
     async session({ session, token, user }) {
       session.jwt = token.jwt;
-      session.id = token.id;
+      session.user.id = token.id;
+      session.user.role = token.role;
       return session;
     },
 
     async jwt({ token, user, account }) {
       const isSignIn = user ? true : false;
       if (isSignIn) {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/${account?.provider}/callback?access_token=${account?.access_token}`
-        );
-        const data = await response.json();
-        token.jwt = data.jwt;
-        token.id = data.user.id;
+        try{
+            const response = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/auth/${account?.provider}/callback?access_token=${account?.access_token}`
+            );
+            const data = await response.json();
+            token.jwt = data.jwt;
+            token.id = data.user.id;
+            const kek = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/users/me?populate=role`,
+              { headers: new Headers({ Authorization: `Bearer ${data.jwt}` }) }
+            );
+            const userInfo = await kek.json();
+            token.role = userInfo?.role?.name || "Unauth"
+        } catch (error) {console.error(error)}
       }
       return token;
     },
